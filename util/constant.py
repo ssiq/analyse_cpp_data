@@ -14,3 +14,49 @@ DEBUG_EXCEPTION_NOT_HANDLES = 'debug_exception_not_handled'
 LOCAL_VARIABLE = 'local_variable'
 BREAKPOINT_EVENT = 'breakpoint_event'
 SOLUTION_OPEN_EVENT = 'solution_open_eventfile_event'
+
+
+class OperatorType:
+    NAME = 'operator'
+    TEXT_SAVE = '1'
+    TEXT_CUT = '2'
+    TEXT_PASTE = '3'
+    TEXT_COPY = '4'
+    CONTENT_INSERT = '5'
+    CONTENT_REPLACE = '6'
+    CONTENT_DELETE = '7'
+    CONTENT_SAVE = '8'
+    BUILD = '9'
+    DEBUG_TUN = '10'
+    DEBUG_BREAK = '11'
+    DEBUG_EXCEPTION_NOT_HANDLED = '12'
+
+    @staticmethod
+    def id_to_name(id):
+        res = {
+            '1': 'text_save',
+            '2': 'text_cut',
+            '3': 'text_paste',
+            '4': 'text_copy',
+            '5': 'content_insert',
+            '6': 'content_replace',
+            '7': 'content_delete',
+            '8': 'content_save',
+            '9': 'build',
+            '10': 'debug_run',
+            '11': 'debug_break',
+            '12': 'debug_exception_not_handled'
+        }
+        return res[id]
+
+    @staticmethod
+    def id_to_category(id):
+        id = int(id)
+        if 1 <= id <= 4:
+            return 'text'
+        elif 5 <= id <= 8:
+            return 'content'
+        elif id == 9:
+            return 'build'
+        elif 10 <= id <= 12:
+            return 'debug'

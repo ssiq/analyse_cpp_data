@@ -10,3 +10,5 @@ def get_all_information_from_table_as_pd_dataframe(con, table_name):
     return pd.read_sql("select * from {};".format(table_name), con)
 
 
+def do_sql(con, sql):
+    return pd.read_sql(sql, con)
