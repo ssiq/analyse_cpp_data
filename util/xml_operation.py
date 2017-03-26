@@ -136,9 +136,16 @@ def combine_database(con):
 
     # transform debug
     # debug part is not implement
-    debug_info_df = get_all_information_from_table_as_pd_dataframe(con, 'debug_info')
+    #debug_info_df = get_all_information_from_table_as_pd_dataframe(con, 'debug_info')
     debug_break_df = get_all_information_from_table_as_pd_dataframe(con, 'debug_break')
     debug_run_df = get_all_information_from_table_as_pd_dataframe(con, 'debug_run')
+
+    sql = "select debug_info.id as id, debug_info.type as type, debug_info.timestamp as timestamp, " \
+        "debug_info.debug_target as debug_target, debug_run.run_type as run_type, " \
+        "debug_break.break_reason as break_reason from debug_info " \
+        "left join debug_run on debug_info.id = debug_run.id " \
+        "left join debug_break on debug_info.id = debug_break.id "
+    debug_info_df = do_sql(con, sql)
 
     def debug_transform(element):
         _check_series(element)
@@ -151,6 +158,12 @@ def combine_database(con):
                                'exception_not_handled': constant.OperatorType.DEBUG_EXCEPTION_NOT_HANDLED}[element[k]]
             elif k == 'timestamp':
                 r[TIME] = string_to_datetime(element[k])
+            elif k == 'run_type':
+                if element['type'] == 'run':
+                    r['action'] = element[k]
+            elif k == 'break_reason':
+                if element['type'] == 'break':
+                    r['action'] = element[k]
             else:
                 r[k] = element[k]
         return r
