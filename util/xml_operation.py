@@ -160,10 +160,10 @@ def combine_database(con):
                 r[TIME] = string_to_datetime(element[k])
             elif k == 'run_type':
                 if element['type'] == 'run':
-                    r['action'] = element[k]
+                    r['debug_action'] = element[k]
             elif k == 'break_reason':
                 if element['type'] == 'break':
-                    r['action'] = element[k]
+                    r['debug_action'] = element[k]
             else:
                 r[k] = element[k]
         return r
