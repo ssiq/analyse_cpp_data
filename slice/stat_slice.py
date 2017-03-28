@@ -44,6 +44,8 @@ def stat_build(data):
     res['slice_type'] = 'build'
     res['slice_id'] = data[0]['buildid']
     error_list = deal_error(data[0]['buildlogcontent'])
+    result = deal_result(data[0]['buildlogcontent'])
+    res['build_result'] = result
     res['error_count'] = len(error_list)
     res['error'] = error_list
     return res
@@ -92,6 +94,26 @@ def deal_error(content):
             err = {'position': position, 'error_code': code, 'error_message': message}
             res.append(err)
     return res
+
+
+def deal_result(content):
+    lines=content.split("\n")
+    for temp in lines:
+        temp=temp.strip()
+        temps=temp.split(">")
+        if len(temps)>1:
+            line=temp[2:]
+        else:
+            line=temp
+        pattern = re.compile(r"^(Build succeeded|生成成功).*")
+        match = pattern.search(line)
+        if match:
+            return 1
+        pattern = re.compile(r"^(Build FAILED|生成失败).*")
+        match = pattern.search(line)
+        if match:
+            return 0
+    return 0
 
 
 def stat(data, types):
