@@ -6,6 +6,13 @@ import datetime
 import slice.stat_slice as stat
 import numpy as np
 from matplotlib.lines import Line2D
+import plotly
+import plotly.offline as py
+import plotly.graph_objs as go
+import plotly.figure_factory as ff
+from plotly import tools
+import scipy.stats as stats
+
 
 def show_insert(data):
     leg=['text', 'build', 'debug']
@@ -57,8 +64,46 @@ def show_insert(data):
         pic_data['debug_end'] = dict_debug_end
     pic = pd.DataFrame(pic_data, index=rng)
     pic = pic.fillna(value=0)
-    print(pic)
 
-    pic.plot()
-    plt.legend(loc='best')
-    plt.show()
+    fig = tools.make_subplots(rows=3, cols=1, shared_xaxes=True)
+
+    fig.append_trace(go.Scatter(x=pic.index, y=pic['add'], name='add'), 1, 1)
+    fig.append_trace(go.Scatter(x=pic.index, y=-pic['delete'], name='delete'), 1, 1)
+
+    debug_list = []
+    pre_run = None
+    for t in pic.index:
+        if pic.loc[t, 'debug_run'] != 0:
+            pre_run = t
+        if pic.loc[t, 'debug_end'] != 0:
+            if pre_run is None:
+                continue
+            debug_list.append([pre_run, t])
+            pre_run = None
+
+    if len(debug_list) != 0:
+        y_begin = int(-len(debug_list)/2)
+        x = [debug_list[0]]
+        y = [y_begin, y_begin]
+        pre_end = debug_list[0][1]
+        for tx, ty in zip(debug_list[1:], range(y_begin+1, y_begin+len(debug_list))):
+            x.append(pre_end+(tx[0]-pre_end)/2)
+            y.append(None)
+            x.extend(tx)
+            y.extend([ty, ty])
+            pre_end = tx[1]
+        fig.append_trace(go.Scatter(x=x, y=y, name='debug', line={'width': 10}), 2, 1)
+
+    build_success_x = []
+    build_failed_x = []
+    for t in pic.index:
+        if pic.loc[t, 'build_success'] != 0:
+            build_success_x.append(t)
+        if pic.loc[t, 'build_failed'] != 0:
+            build_failed_x.append(t)
+    fig.append_trace(go.Scatter(x=build_success_x, y=['success']*len(build_success_x),
+                                name='build_success', mode='markers'), 3, 1)
+    fig.append_trace(go.Scatter(x=build_failed_x, y=['failed']*len(build_failed_x), name='build_failed', mode='markers')
+                     , 3, 1)
+
+    py.iplot(fig)
