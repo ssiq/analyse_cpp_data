@@ -14,6 +14,7 @@ DEBUG_EXCEPTION_NOT_HANDLES = 'debug_exception_not_handled'
 LOCAL_VARIABLE = 'local_variable'
 BREAKPOINT_EVENT = 'breakpoint_event'
 SOLUTION_OPEN_EVENT = 'solution_open_eventfile_event'
+ITEMTABLE = 'ItemTable'
 
 
 class OperatorType:
@@ -30,6 +31,10 @@ class OperatorType:
     DEBUG_TUN = '10'
     DEBUG_BREAK = '11'
     DEBUG_EXCEPTION_NOT_HANDLED = '12'
+    BROWSER_URL = '13'
+    BROWSER_COPY = '14'
+    BROWSER_PASTE = '15'
+    BROWSER_CUT = '16'
 
     @staticmethod
     def id_to_name(id):
@@ -45,7 +50,11 @@ class OperatorType:
             '9': 'build',
             '10': 'debug_run',
             '11': 'debug_break',
-            '12': 'debug_exception_not_handled'
+            '12': 'debug_exception_not_handled',
+            '13': 'browser_url',
+            '14': 'browser_copy',
+            '15': 'browser_paste',
+            '16': 'browser_cut',
         }
         return res[id]
 
@@ -60,3 +69,5 @@ class OperatorType:
             return 'build'
         elif 10 <= id <= 12:
             return 'debug'
+        elif 13 <= id <= 16:
+            return 'browser'
