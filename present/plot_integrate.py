@@ -66,7 +66,7 @@ def show_insert(data):
     pic = pd.DataFrame(pic_data, index=rng)
     pic = pic.fillna(value=0)
 
-    fig = tools.make_subplots(rows=4, cols=1, shared_xaxes=True)
+    fig = tools.make_subplots(rows=5, cols=1, shared_xaxes=True)
 
     fig.append_trace(go.Scatter(x=pic.index, y=pic['add'], name='add'), 1, 1)
     fig.append_trace(go.Scatter(x=pic.index, y=pic['delete'], name='delete'), 2, 1)
@@ -109,7 +109,15 @@ def show_insert(data):
 
     py.iplot(fig)
 
-    fig = tools.make_subplots(rows=4, cols=1, shared_xaxes=True)
+    browser_x = []
+    browser_y = []
+    for item in data:
+        if OperatorType.id_to_category(item[OperatorType.NAME]):
+            browser_x.append(item['time'])
+            browser_y.append(item[OperatorType.NAME])
+    fig.append_trace(go.Scatter(x=browser_x, y=browser_y, name='browser', mode='markers'), 5, 1)
+
+    fig = tools.make_subplots(rows=4, cols=1)
     is_begin = True
     insert_count = 0
     ratio_list = []
