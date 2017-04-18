@@ -32,9 +32,10 @@ class OperatorType:
     DEBUG_BREAK = '11'
     DEBUG_EXCEPTION_NOT_HANDLED = '12'
     BROWSER_URL = '13'
-    BROWSER_COPY = '14'
-    BROWSER_PASTE = '15'
-    BROWSER_CUT = '16'
+    BROWSER_URL_CLOSE = '14'
+    BROWSER_COPY = '15'
+    BROWSER_PASTE = '16'
+    BROWSER_CUT = '17'
 
     @staticmethod
     def id_to_name(id):
@@ -52,9 +53,10 @@ class OperatorType:
             '11': 'debug_break',
             '12': 'debug_exception_not_handled',
             '13': 'browser_url',
-            '14': 'browser_copy',
-            '15': 'browser_paste',
-            '16': 'browser_cut',
+            '14': 'browser_url_close',
+            '15': 'browser_copy',
+            '16': 'browser_paste',
+            '17': 'browser_cut',
         }
         return res[id]
 
@@ -69,5 +71,5 @@ class OperatorType:
             return 'build'
         elif 10 <= id <= 12:
             return 'debug'
-        elif 13 <= id <= 16:
+        elif 13 <= id <= 17:
             return 'browser'

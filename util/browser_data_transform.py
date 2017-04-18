@@ -38,6 +38,8 @@ def transform_jsonstr_to_ele(jsonstr):
     ele['time'] = string_to_datetime(ele['time'])
     if ele['type'] == 'url':
         ele[constant.OperatorType.NAME] = constant.OperatorType.BROWSER_URL
+    if ele['type'] == 'url_close':
+        ele[constant.OperatorType.NAME] = constant.OperatorType.BROWSER_URL_CLOSE
     elif ele['type'] == 'copy':
         ele[constant.OperatorType.NAME] = constant.OperatorType.BROWSER_COPY
     elif ele['type'] == 'paste':
