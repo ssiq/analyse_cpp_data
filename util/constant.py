@@ -36,6 +36,7 @@ class OperatorType:
     BROWSER_COPY = '15'
     BROWSER_PASTE = '16'
     BROWSER_CUT = '17'
+    TEST = '18'
 
     @staticmethod
     def id_to_name(id):
@@ -57,6 +58,7 @@ class OperatorType:
             '15': 'browser_copy',
             '16': 'browser_paste',
             '17': 'browser_cut',
+            '18': 'test',
         }
         return res[id]
 
@@ -73,3 +75,5 @@ class OperatorType:
             return 'debug'
         elif 13 <= id <= 17:
             return 'browser'
+        elif id == 18:
+            return 'test'
