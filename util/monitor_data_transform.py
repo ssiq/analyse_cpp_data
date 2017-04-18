@@ -88,6 +88,9 @@ def combine_database(con):
                 r[TIME] = string_to_datetime(element[k])
             elif k == 'operation':
                 r[OPERATOR] = action_map[element[k]]
+            elif k == 'textfrom' or k == 'textto':
+                element[k] = element[k][1:-1]
+                r[k] = element[k]
             else:
                 r[k] = element[k]
         return r
