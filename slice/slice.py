@@ -31,6 +31,49 @@ def filter_build(data):
     return res
 
 
+def filter_build_testcase(data):
+    i = 0
+    res = []
+    pick = []
+    before = []
+    has_testcase = 0
+    pick_id = ""
+    pick_project = ""
+    inpick = 1
+    for i in range(len(data.dict_list)):
+        if data.dict_list[i][OperatorType.NAME] == '9':
+            if inpick == 1 and len(pick) > 0 and pick_id == data.dict_list[i]['buildid'] and pick_project == \
+                    data.dict_list[i]['projectname']:
+                continue
+            inpick = 1
+            pick_id = data.dict_list[i]['buildid']
+            pick_project = data.dict_list[i]['projectname']
+            if len(pick) != 0:
+                act = data.dict_list[i].copy()
+                pick.append(act)
+                if has_testcase == 1:
+                    if len(before) != 0:
+                        res.append(before)
+                    before = pick
+                    has_testcase = 0
+                elif has_testcase == 0:
+                    before.extend(pick)
+            pick = []
+        elif data.dict_list[i][OperatorType.NAME] == '18' and inpick:
+            has_testcase = 1
+            act = data.dict_list[i].copy()
+            pick.append(act)
+        elif inpick:
+            act = data.dict_list[i].copy()
+            pick.append(act)
+
+    if has_testcase == 1:
+        if len(before) != 0:
+            res.append(before)
+
+    return res
+
+
 def filter_copy(data):
     """
     :param data: Data Object get from xml_operation.py

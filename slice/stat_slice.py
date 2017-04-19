@@ -20,7 +20,13 @@ def count_operator(data):
         OperatorType.BUILD: 0,
         OperatorType.DEBUG_TUN: 0,
         OperatorType.DEBUG_BREAK: 0,
-        OperatorType.DEBUG_EXCEPTION_NOT_HANDLED: 0
+        OperatorType.DEBUG_EXCEPTION_NOT_HANDLED: 0,
+        OperatorType.BROWSER_URL: 0,
+        OperatorType.BROWSER_URL_CLOSE: 0,
+        OperatorType.BROWSER_COPY: 0,
+        OperatorType.BROWSER_PASTE: 0,
+        OperatorType.BROWSER_CUT: 0,
+        OperatorType.TEST: 0
     }
     for elem in data:
         res['0'] += 1
@@ -45,6 +51,20 @@ def stat_build(data):
     res['slice_id'] = data[0]['buildid']
     error_list = deal_error(data[0]['buildlogcontent'])
     result = deal_result(data[0]['buildlogcontent'])
+    res['build_result'] = result
+    res['error_count'] = len(error_list)
+    res['error'] = error_list
+    return res
+
+
+def stat_build_testcase(data):
+    res = stat_util(data)
+    len_data = len(data)
+    res['slice_type'] = 'build_testcase'
+    res['slice_id'] = data[len_data-1]['buildid']
+    print('stat_build_testcase::', res['slice_id'])
+    error_list = deal_error(data[len_data-1]['buildlogcontent'])
+    result = deal_result(data[len_data-1]['buildlogcontent'])
     res['build_result'] = result
     res['error_count'] = len(error_list)
     res['error'] = error_list
@@ -118,6 +138,7 @@ def deal_result(content):
 
 def stat(data, types):
     res = []
+    one = {}
     for item in data:
         if types == "build":
             one = stat_build(item)
@@ -125,5 +146,7 @@ def stat(data, types):
             one = stat_copy(item)
         elif types == "debug":
             one = stat_debug(item)
+        elif types == "build_testcase":
+            one = stat_build_testcase(item)
         res.append(one)
     return res
