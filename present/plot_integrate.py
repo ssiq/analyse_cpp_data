@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import pandas as pd
 from util.constant import OperatorType as OperatorType
 import matplotlib.pyplot as plt
@@ -34,10 +36,10 @@ def show_insert(data):
                 time = item['time'] - delta
                 if time not in dict_from:
                     dict_from[time] = 0
-                dict_from[time] += ((len(item['textfrom']) - 2) / period)
+                dict_from[time] += ((len(item['textfrom']) ) / period)
                 if time not in dict_to:
                     dict_to[time] = 0
-                dict_to[time] += ((len(item['textto']) - 2) / period)
+                dict_to[time] += ((len(item['textto']) ) / period)
             if item['time'] not in dict_from:
                 dict_from[item['time']] = 0
             #dict_from[item['time']] += len(item['textfrom'])
@@ -107,15 +109,18 @@ def show_insert(data):
     fig.append_trace(go.Scatter(x=build_failed_x, y=['failed']*len(build_failed_x), name='build_failed', mode='markers')
                      , 4, 1)
 
-    py.iplot(fig)
-
-    browser_x = []
-    browser_y = []
+    browser_x_dict = defaultdict(lambda: [])
+    browser_y_dict = defaultdict(lambda: [])
     for item in data:
-        if OperatorType.id_to_category(item[OperatorType.NAME]):
-            browser_x.append(item['time'])
-            browser_y.append(item[OperatorType.NAME])
-    fig.append_trace(go.Scatter(x=browser_x, y=browser_y, name='browser', mode='markers'), 5, 1)
+        if OperatorType.id_to_category(item[OperatorType.NAME]) == 'browser':
+            name = OperatorType.id_to_name(item[OperatorType.NAME])
+            browser_x_dict[name].append(item['time'])
+            browser_y_dict[name].append(name)
+    for k in browser_x_dict.keys():
+        fig.append_trace(go.Scatter(x=browser_x_dict[k], y=browser_y_dict[k],
+                                    name=k, mode='markers'), 5, 1)
+
+    py.iplot(fig)
 
     fig = tools.make_subplots(rows=4, cols=1)
     is_begin = True
@@ -125,11 +130,11 @@ def show_insert(data):
     delete_list = []
     for item in data:
         if item[OperatorType.NAME] == OperatorType.CONTENT_INSERT:
-            num = len(item['textto']) - 2
+            num = len(item['textto'])
             insert_count += num
             insert_list.append(num)
         elif item[OperatorType.NAME] == OperatorType.CONTENT_DELETE:
-            num = len(item['textfrom'])-2
+            num = len(item['textfrom'])
             ratio_list.append(insert_count/num)
             delete_list.append(num)
             insert_count = 0

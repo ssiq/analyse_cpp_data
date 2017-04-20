@@ -1,16 +1,18 @@
+from collections import defaultdict
+
 import pandas as pd
 from util.constant import OperatorType as OperatorType
 import plotly.graph_objs as go
 
 
 def _extract_freq_df(data, freq):
-    insert_delete_dict = {}
+    insert_delete_dict = defaultdict(lambda: [])
     for item in data:
         if item[OperatorType.NAME] == OperatorType.CONTENT_INSERT \
                 or item[OperatorType.NAME] == OperatorType.CONTENT_DELETE:
-            insert_delete_dict['time'] = item['item']
-            insert_delete_dict['delete'] = len(item['textfrom'])
-            insert_delete_dict['add'] = len(item['textto'])
+            insert_delete_dict['delete'].append(len(item['textfrom']))
+            insert_delete_dict['add'].append(len(item['textto']))
+            insert_delete_dict['time'].append(item['time'])
     insert_delete_df = pd.DataFrame(insert_delete_dict)
     insert_delete_df = insert_delete_df.groupby(pd.Grouper(key='time', freq=freq)).sum()
     return insert_delete_df
