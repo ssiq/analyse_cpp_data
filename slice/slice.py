@@ -85,14 +85,14 @@ def filter_copy(data):
     inpick = 0
     temp = []
     for i in range(len(data.dict_list)):
-        if data.dict_list[i][OperatorType.NAME] == '2' or data.dict_list[i][OperatorType.NAME] == '4':
-            inpick=1
+        if data.dict_list[i][OperatorType.NAME] == '2' or data.dict_list[i][OperatorType.NAME] == '4' or data.dict_list[i][OperatorType.NAME] == '15' or data.dict_list[i][OperatorType.NAME] == '17':
+            inpick = 1
             if len(pick) != 0:
                 res.append(pick)
-            pick=[]
+            pick = []
             temp = []
             pick.append(data.dict_list[i].copy())
-        elif data.dict_list[i][OperatorType.NAME] == '3' and inpick:
+        elif (data.dict_list[i][OperatorType.NAME] == '3' or data.dict_list[i][OperatorType.NAME] == '16' )and inpick:
             temp.append(data.dict_list[i].copy())
             pick.extend(temp)
             temp = []

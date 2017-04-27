@@ -62,7 +62,6 @@ def stat_build_testcase(data):
     len_data = len(data)
     res['slice_type'] = 'build_testcase'
     res['slice_id'] = data[len_data-1]['buildid']
-    print('stat_build_testcase::', res['slice_id'])
     error_list = deal_error(data[len_data-1]['buildlogcontent'])
     result = deal_result(data[len_data-1]['buildlogcontent'])
     res['build_result'] = result
@@ -83,15 +82,29 @@ def stat_copy(data):
     paste_count = 0
     res['slice_type'] = 'copy'
     res['paste_files'] = []
+    if 'name' not in data[0]:
+        data[0]['name'] = data[0]['title']
+    #("content:{}|||{}".format(data[0]['name'], data[0]['content']))
     for action in data:
         if action[OperatorType.NAME] == OperatorType.TEXT_PASTE:
             paste_count += 1
             if action['name'] not in res['paste_files']:
                 res['paste_files'].append(action['name'])
+                #print("    paste_file:{}|||{}".format(action['name'], action['content']))
+        elif action[OperatorType.NAME] == OperatorType.BROWSER_PASTE:
+            paste_count += 1
+            if action['title'] not in res['paste_files']:
+                res['paste_files'].append(action['title'])
+                #print("    paste_file:{}|{}".format(action['title'], action['content']))
     res['paste_count'] = paste_count
     res['copy_length'] = len(data[0]['content'])
-    res['copy_file'] = data[0]['name']
+    if data[0][OperatorType.NAME] == OperatorType.TEXT_COPY or data[0][OperatorType.NAME] == OperatorType.TEXT_CUT:
+        res['copy_file'] = data[0]['name']
+    elif data[0][OperatorType.NAME] == OperatorType.BROWSER_COPY or data[0][OperatorType.NAME] == OperatorType.BROWSER_CUT:
+        res['copy_file'] = data[0]['title']
     res['slice_id'] = data[0]['time']
+    res['content'] = data[0]['content']
+    #print("paste_files:{}".format(res['paste_files']))
     return res
 
 
