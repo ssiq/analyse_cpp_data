@@ -20,6 +20,9 @@ def transform_test_log(f):
             if k == 'message':
                 json_obj = json.loads(v)
                 v = {a: [pattern.match(t).group(1) for t in b] for a, b in json_obj.items()}
+                for tk in ['AC', 'TIE', 'WA']:
+                    if tk not in v:
+                        v[tk] = []
             res[k] = v
         res[OperatorType.NAME] = OperatorType.TEST
         op_dict_list.append(res)

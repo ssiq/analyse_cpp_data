@@ -19,6 +19,10 @@ def _extract_freq_df(data, freq):
     return insert_delete_df
 
 
+def extract_freq_df(data, freq):
+    return _extract_freq_df(data, freq)
+
+
 def insert_delete_scatter_trace(data, freq):
     '''
     :param data: a data dict list
