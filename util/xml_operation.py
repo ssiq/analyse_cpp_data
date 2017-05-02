@@ -28,20 +28,31 @@ class Data(object):
         return self._dict_list
 
 
-def combine_database(con_mon=None, con_bro=None, test_log_handler=None):
+def combine_database(con_mon=None, con_bro=None, test_log=None):
     '''
     :param con_mon: a db connect object of codding
     :param con_bro: a db connect object of browser
     :param test_log_handler: a file like object of test log
     :return: a Data object
     '''
+
+    from util.scan_database import scan_dir
+    import os
+
     res = []
     if con_mon:
         res.extend(mon_transform.combine_database(con_mon))
     if con_bro:
         res.extend(bro_transform.combine_broswer_data(con_bro))
-    if test_log_handler:
-        res.extend(transform_test_log(test_log_handler))
+    for file in scan_dir(test_log):
+        test_log_handler = None
+        if os.path.isfile(file):
+            (filepath, tempfilename) = os.path.split(file);
+            (shotname, extension) = os.path.splitext(tempfilename);
+            if shotname == 'app':
+                test_log_handler = open(file)
+        if test_log_handler:
+            res.extend(transform_test_log(test_log_handler))
 
     res = sorted(res, key=lambda x: x['time'])
     return Data(res)
