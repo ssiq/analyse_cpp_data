@@ -26,7 +26,7 @@ def extract_features_and_score(data):
     laplace_smoothing = 10
     insert_delete_df['add'] += laplace_smoothing
     insert_delete_df['delete'] += laplace_smoothing
-    insert_delete_ratio = (insert_delete_df['add'] / insert_delete_df['delete']).mean()
+    insert_delete_ratio = (insert_delete_df['add'] / insert_delete_df['delete']).median()
 
     insert_sum = 0
     insert_times = 0

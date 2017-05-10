@@ -74,6 +74,7 @@ def stat_debug(data):
     res = stat_util(data)
     res['slice_type'] = 'debug'
     res['slice_id'] = data[0]['id']
+    res['start_time'] = data[0]['time']
     return res
 
 
