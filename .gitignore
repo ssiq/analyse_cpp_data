@@ -1,5 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 .idea
-data
+/data
 .log
-__pycache__/*
+__pycache__/
+/test

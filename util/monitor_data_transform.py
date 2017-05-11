@@ -54,7 +54,12 @@ def combine_database(con):
                 action_map = {'Save': constant.OperatorType.TEXT_SAVE,
                               'Cut': constant.OperatorType.TEXT_CUT,
                               'Paste': constant.OperatorType.TEXT_PASTE,
-                              'Copy': constant.OperatorType.TEXT_COPY}
+                              'Copy': constant.OperatorType.TEXT_COPY,
+                              'StartUndo': constant.OperatorType.TEXT_STARTUNDO,
+                              'UndoEnd': constant.OperatorType.TEXT_UNDOEND,
+                              'StartRedo': constant.OperatorType.TEXT_STARTREDO,
+                              'RedoEnd': constant.OperatorType.TEXT_REDOEND
+                              }
                 r[OPERATOR] = action_map[element[k]]
             else:
                 r[k] = element[k]

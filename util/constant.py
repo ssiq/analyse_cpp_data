@@ -37,6 +37,10 @@ class OperatorType:
     BROWSER_PASTE = '16'
     BROWSER_CUT = '17'
     TEST = '18'
+    TEXT_STARTUNDO = '19'
+    TEXT_UNDOEND = '20'
+    TEXT_STARTREDO = '21'
+    TEXT_REDOEND = '22'
 
     @staticmethod
     def id_to_name(id):
@@ -59,6 +63,10 @@ class OperatorType:
             '16': 'browser_paste',
             '17': 'browser_cut',
             '18': 'test',
+            '19': 'text_StartUndo',
+            '20': 'text_UndoEnd',
+            '21': 'text_StartRedo',
+            '22': 'text_RedoEnd'
         }
         return res[id]
 
@@ -77,3 +85,5 @@ class OperatorType:
             return 'browser'
         elif id == 18:
             return 'test'
+        elif 19 <= id <= 22:
+            return 'text'
