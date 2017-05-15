@@ -26,7 +26,11 @@ def count_operator(data):
         OperatorType.BROWSER_COPY: 0,
         OperatorType.BROWSER_PASTE: 0,
         OperatorType.BROWSER_CUT: 0,
-        OperatorType.TEST: 0
+        OperatorType.TEST: 0,
+        OperatorType.TEXT_STARTUNDO: 0,
+        OperatorType.TEXT_UNDOEND: 0,
+        OperatorType.TEXT_STARTREDO: 0,
+        OperatorType.TEXT_REDOEND: 0
     }
     for elem in data:
         res['0'] += 1
@@ -98,13 +102,13 @@ def stat_copy(data):
                 res['paste_files'].append(action['title'])
                 #print("    paste_file:{}|{}".format(action['title'], action['content']))
     res['paste_count'] = paste_count
-    res['copy_length'] = len(data[0]['content'])
+    res['copy_length'] = len(data[len(data)-1]['content'])
     if data[0][OperatorType.NAME] == OperatorType.TEXT_COPY or data[0][OperatorType.NAME] == OperatorType.TEXT_CUT:
         res['copy_file'] = data[0]['name']
     elif data[0][OperatorType.NAME] == OperatorType.BROWSER_COPY or data[0][OperatorType.NAME] == OperatorType.BROWSER_CUT:
         res['copy_file'] = data[0]['title']
     res['slice_id'] = data[0]['time']
-    res['content'] = data[0]['content']
+    res['content'] = data[len(data)-1]['content']
     #print("paste_files:{}".format(res['paste_files']))
     return res
 

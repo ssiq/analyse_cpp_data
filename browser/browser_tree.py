@@ -45,7 +45,7 @@ def addDirty(res, dirty):
     for item in dirty:
         temp = {}
         if item[constant.OperatorType.NAME] == constant.OperatorType.BROWSER_URL:
-            temp['name'] = item['type'] + '_' + str(item['tabId']) + '_' + item['title']
+            temp['name'] = item['type'] + '_' + str(item['tabId']) + '_' + item['title'] +'_'+item['url']
             temp['isParent'] = 'true'
             temp['icon'] = 'test.png'
             sam = find_by_id(res, item['tabId'])
@@ -86,7 +86,7 @@ def get_show_struct(data):
     for item in data:
         temp = {}
         if item[constant.OperatorType.NAME] == constant.OperatorType.BROWSER_URL:
-            temp['name'] = item['type'] + '_' + str(item['tabId']) + '_' +str(item['time'])+'_'+item['title']
+            temp['name'] = item['type'] + '_' + str(item['tabId']) + '_' +str(item['time'])+'_'+item['title']+'_'+item['url']
             temp['isParent'] = 'true'
             temp['icon'] = r'js/test.png'
             sam = find_by_id(res, item['tabId'])
