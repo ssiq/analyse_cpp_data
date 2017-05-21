@@ -2,6 +2,7 @@ import os
 from util.constant import OperatorType
 from util.file_util import savefile
 from util.file_util import savebytesfile
+from build.error_util import deal_error as deal_error
 import re
 from lxml import etree
 
@@ -9,7 +10,8 @@ from lxml import etree
 def output_build_files(data, targetpath):
     if not os.path.exists(targetpath):
         os.makedirs(targetpath)
-    os.removedirs(targetpath)
+    import shutil
+    shutil.rmtree(targetpath)
 
     projects = {}
     for item in data:
@@ -30,19 +32,22 @@ def output_build_files(data, targetpath):
                 projects[projectname] = {'name': projectname, 'files': {}, 'build_count': 0}
             projects[projectname]['build_count'] += 1
             tmppath = os.path.join(targetpath, projectname, str(projects[projectname]['build_count']))
-            save_project(projects[projectname], tmppath)
+            filelist = deal_files(item['buildlogcontent'])
+            save_project(projects[projectname], tmppath, filelist)
             errs = deal_error(item['buildlogcontent'])
             err_xml = convert_to_xml(errs)
             output_errors_xml(tmppath, err_xml)
 
 
-def save_project(project, targetpath):
+def save_project(project, targetpath, filelist=[]):
     if not os.path.exists(targetpath):
         os.makedirs(targetpath)
     if 'files' not in project:
         return
     files = project['files']
     for (key, value) in files.items():
+        if value['name'] not in filelist and filelist is not []:
+            continue
         path = os.path.join(targetpath, value['name'])
         encoding = 'utf-8'
         savefile(path, value['content'], encoding)
@@ -57,26 +62,28 @@ def save_all_projects(projects, targetpath):
         save_project(value, tmppath)
 
 
-def deal_error(content):
-    errs = []
-    lines=content.split("\n")
+def deal_files(content):
+    files = []
+    lines = content.split("\n")
     for temp in lines:
-        temp=temp.strip()
-        temps=temp.split(">")
-        if len(temps)>1:
-            line=temp[2:]
+        temp = temp.strip()
+        temps = temp.split(">")
+        if len(temps) > 1:
+            line = temp[2:]
         else:
-            line=temp
-        pattern=re.compile(r"^(.*): (fatal |)error (\w*): (.*)$")
-        match=pattern.search(line)
+            line = temp
+        pattern = re.compile(r"^cl(.*)\.cpp\"?$")
+        match = pattern.search(line)
         if match:
-            position=match.group(1)
-            code=match.group(3)
-            message=match.group(4)
-            err = {'line': line, 'position': position, 'code': code, 'message': message}
-            errs.append(err)
-            print(position+"\t"+code+"\t"+message)
-    return errs
+            keylist = match.group(0).split(" ")
+            for keyname in keylist:
+                if keyname[0:1] == '"':
+                    keyname = keyname[1:len(keyname)-1]
+                    #print(keyname)
+                if keyname[len(keyname)-4:len(keyname)] != '.cpp':
+                    continue
+                files.append(keyname)
+    return files
 
 
 def convert_to_xml(errs):

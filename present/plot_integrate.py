@@ -34,6 +34,7 @@ def show_insert(data):
             for i in range(period):
                 delta = datetime.timedelta(seconds=i)
                 time = item['time'] - delta
+                #print(time)
                 if time not in dict_from:
                     dict_from[time] = 0
                 dict_from[time] += ((len(item['textfrom']) ) / period)
@@ -114,7 +115,7 @@ def show_insert(data):
     for item in data:
         if OperatorType.id_to_category(item[OperatorType.NAME]) == 'browser':
             name = OperatorType.id_to_name(item[OperatorType.NAME])
-            browser_x_dict[name].append(item['time'])
+            browser_x_dict[name].append(item['time'].replace(tzinfo=datetime.timezone(datetime.timedelta(hours=0))))
             browser_y_dict[name].append(name)
     for k in browser_x_dict.keys():
         fig.append_trace(go.Scatter(x=browser_x_dict[k], y=browser_y_dict[k],

@@ -46,8 +46,8 @@ def merge_fixed_delete(data, delete_threshhold=20):
         return moved_data
 
     def merge(insert_action, delete_action):
-        print('merge {} and {}'.format(insert_action, delete_action))
-        insert_action['textto'] = insert_action['tex tto'][:-len(delete_action['textfrom'])]
+        #print('merge {} and {}'.format(insert_action, delete_action))
+        insert_action['textto'] = insert_action['textto'][:-len(delete_action['textfrom'])]
         return insert_action
     moved_data = []
     cached_action = []
