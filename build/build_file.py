@@ -46,8 +46,9 @@ def save_project(project, targetpath, filelist=[]):
         return
     files = project['files']
     for (key, value) in files.items():
-        if value['name'] not in filelist and filelist is not []:
+        if value['name'] not in filelist and filelist is not [] and value['name'][len(value['name'])-4:len(value['name'])] == '.cpp':
             continue
+
         path = os.path.join(targetpath, value['name'])
         encoding = 'utf-8'
         savefile(path, value['content'], encoding)
