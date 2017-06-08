@@ -1,6 +1,6 @@
 import re
 import numpy as np
-from learning.action.data_extractor import extract_score
+from learning.feature.data_extractor import extract_score
 from slice.stat_slice import deal_result
 
 
