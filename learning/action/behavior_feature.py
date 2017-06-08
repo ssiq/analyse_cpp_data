@@ -1,5 +1,6 @@
 import re
 import numpy as np
+from learning.action.data_extractor import extract_score
 from slice.stat_slice import deal_result
 
 
@@ -65,7 +66,6 @@ class ActionType:
         acid = res[name]
         li = [(1 if (n+1) == acid else 0) for n in range(ActionType.COUNT)]
         arr = np.array(li).T
-        print(arr)
         return arr
 
     @staticmethod
@@ -108,7 +108,6 @@ class ActionType:
             '21': 'text_redo',
             '22': ''
         }
-        print(res[id])
         return res[id]
 
     @staticmethod
@@ -159,9 +158,9 @@ def convert_data_to_feature_seq(data):
     '''
     convert data list to vector list directly
     :param data: data list
-    :return: vector list
+    :return: vector list, score
     '''
-    return convert_to_feature_seq(convert_to_action_seq(data))
+    return (convert_to_feature_seq(convert_to_action_seq(data)), extract_score(data))
 
 
 

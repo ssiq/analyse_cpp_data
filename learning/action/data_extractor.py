@@ -30,15 +30,22 @@ def extract_features_and_score(data):
 
     insert_sum = 0
     insert_times = 0
-    score = 0.0
     for item in data:
         if item[constant.OperatorType.NAME] == constant.OperatorType.CONTENT_INSERT:
             insert_sum += len(item['textto'])
             insert_times += 1
+
+    score = extract_score(data)
+
+    return [(end_time-start_time).total_seconds(),
+            float(insert_sum)/insert_times, build_count, debug_count, browser_count, insert_delete_ratio], score
+
+
+def extract_score(data):
+    score = 0.0
+    for item in data:
         if item[constant.OperatorType.NAME] == constant.OperatorType.TEST:
             message = item['message']
             score = max(score, (len(message['AC']))/
                         float(len(message['TIE'])+len(message['WA'])+len(message['AC'])))
-
-    return [(end_time-start_time).total_seconds(),
-            float(insert_sum)/insert_times, build_count, debug_count, browser_count, insert_delete_ratio], score
+    return score
