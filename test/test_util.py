@@ -22,9 +22,9 @@ def clean_data(data):
 
 def read_data(path):
     print('Read data from {}'.format(path))
-    db_path = path + r'\monitor\Dao\log.db'
-    bro_path = path + r'\chrome\chrome-extension_gnodhpdneljjpjdoiadhmigdcblneeoa_0.localstorage'
-    file_path = path + r'\plugin'
+    db_path = os.path.join(path, 'monitor', 'Dao', 'log.db')
+    bro_path = os.path.join(path, 'chrome', 'chrome-extension_gnodhpdneljjpjdoiadhmigdcblneeoa_0.localstorage')
+    file_path = os.path.join(path, 'plugin')
     con = sqlite3.connect(db_path)
     con_bro = sqlite3.connect(bro_path)
     data = xml_ope.combine_database(con, con_bro, file_path)
