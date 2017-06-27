@@ -254,7 +254,7 @@ def convert_insert_data_to_feature_seq(data):
                 for b in bound:
                     if keyid > b:
                         i += 1
-                li = [(1 if i == n else 0) for n in range(12)]
+                li = [(1 if keyid == (n+1) else 0) for n in range(172)]
                 arr = np.array(li).T
                 fea_list.append(arr)
     return (fea_list, extract_score(data))
