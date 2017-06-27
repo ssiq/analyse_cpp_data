@@ -2,50 +2,74 @@ import re
 import numpy as np
 from learning.feature.data_extractor import extract_score
 from slice.stat_slice import deal_result
+from learning.feature.lexical_analysis import get_token_list
 
 
 class ActionType:
 
-    COUNT = 22
+    COUNT = 36
 
     TEXT_SAVE = 1
     TEXT_CUT = 2
-    TEXT_PASTE = 3
-    TEXT_COPY = 4
-    CONTENT_INSERT = 5
-    CONTENT_INSERT_CONDITION = 6
-    CONTENT_INSERT_LOOP = 7
-    CONTENT_REPLACE = 8
-    CONTENT_DELETE = 9
-    BUILD_SUCCESS = 10
-    BUILD_FAILED = 11
-    DEBUG_RUN = 12
-    DEBUG_BREAK = 13
-    DEBUG_EXCEPTION_NOT_HANDLED = 14
-    BROWSER_URL = 15
-    BROWSER_URL_CLOSE = 16
-    BROWSER_COPY = 17
-    BROWSER_PASTE = 18
-    BROWSER_CUT = 19
-    TEST = 20
-    TEXT_UNDO = 21
-    TEXT_REDO = 22
+    TEXT_CUT_CONDITION = 3
+    TEXT_CUT_LOOP = 4
+    TEXT_CUT_LOGIC = 5
+    TEXT_PASTE = 6
+    TEXT_PASTE_CONDITION = 7
+    TEXT_PASTE_LOOP = 8
+    TEXT_PASTE_LOGIC = 9
+    TEXT_COPY = 10
+    TEXT_COPY_CONDITION = 11
+    TEXT_COPY_LOOP = 12
+    TEXT_COPY_LOGIC = 13
+    CONTENT_INSERT = 14
+    CONTENT_INSERT_CONDITION = 15
+    CONTENT_INSERT_LOOP = 16
+    CONTENT_INSERT_KEYWORD = 17
+    CONTENT_INSERT_FUNCTION = 18
+    CONTENT_INSERT_COMPARE = 19
+    CONTENT_INSERT_ASSIGN = 20
+    CONTENT_INSERT_CALCULATE = 21
+    CONTENT_REPLACE = 22
+    CONTENT_DELETE = 23
+    BUILD_SUCCESS = 24
+    BUILD_FAILED = 25
+    DEBUG_RUN = 26
+    DEBUG_BREAK = 27
+    DEBUG_EXCEPTION_NOT_HANDLED = 28
+    BROWSER_URL = 29
+    BROWSER_URL_CLOSE = 30
+    BROWSER_COPY = 31
+    BROWSER_PASTE = 32
+    BROWSER_CUT = 33
+    TEST = 34
+    TEXT_UNDO = 35
+    TEXT_REDO = 36
 
     @staticmethod
     def name_to_feature(name):
-        '''
-        Get the vector form about the action name
-        :param name: action name
-        :return: vector
-        '''
         res = {
             'text_save': ActionType.TEXT_SAVE,
             'text_cut': ActionType.TEXT_CUT,
+            'text_cut_condition': ActionType.TEXT_CUT_CONDITION,
+            'text_cut_loop': ActionType.TEXT_CUT_LOOP,
+            'text_cut_logic': ActionType.TEXT_CUT_LOGIC,
             'text_paste': ActionType.TEXT_PASTE,
+            'text_paste_condition': ActionType.TEXT_PASTE_CONDITION,
+            'text_paste_loop': ActionType.TEXT_PASTE_LOOP,
+            'text_paste_logic': ActionType.TEXT_PASTE_LOGIC,
             'text_copy': ActionType.TEXT_COPY,
+            'text_copy_condition': ActionType.TEXT_COPY_CONDITION,
+            'text_copy_loop': ActionType.TEXT_COPY_LOOP,
+            'text_copy_logic': ActionType.TEXT_COPY_LOGIC,
             'content_insert': ActionType.CONTENT_INSERT,
             'content_insert_condition': ActionType.CONTENT_INSERT_CONDITION,
             'content_insert_loop': ActionType.CONTENT_INSERT_LOOP,
+            'content_insert_function': ActionType.CONTENT_INSERT_FUNCTION,
+            'content_insert_keyword': ActionType.CONTENT_INSERT_KEYWORD,
+            'content_insert_compare': ActionType.CONTENT_INSERT_COMPARE,
+            'content_insert_assign': ActionType.CONTENT_INSERT_ASSIGN,
+            'content_insert_calculate': ActionType.CONTENT_INSERT_CALCULATE,
             'content_replace': ActionType.CONTENT_REPLACE,
             'content_delete': ActionType.CONTENT_DELETE,
             'build_success': ActionType.BUILD_SUCCESS,
@@ -62,6 +86,11 @@ class ActionType:
             'text_undo': ActionType.TEXT_UNDO,
             'text_redo': ActionType.TEXT_REDO,
         }
+        '''
+        Get the vector form about the action name
+        :param name: action name
+        :return: vector
+        '''
 
         acid = res[name]
         li = [(1 if (n+1) == acid else 0) for n in range(ActionType.COUNT)]
@@ -81,15 +110,14 @@ class ActionType:
             content = item['buildlogcontent']
         if 'textto' in item:
             content = item['textto']
+        command_content = ActionType.check_command_content(content, item['operator'])
+        insert_content = ActionType.check_insert_content(content, item['operator'])
         res = {
             '1': 'text_save',
-            '2': 'text_cut',
-            '3': 'text_paste',
-            '4': 'text_copy',
-            '5': 'content_insert' if (id != '5' or (ActionType.check_key_content(content)['condition'] == 0 and
-                                      ActionType.check_key_content(content)['loop'] == 0)) else (
-                'content_insert_loop' if ActionType.check_key_content(content)[
-                                                  'loop'] == 1 else 'content_insert_condition'),
+            '2': command_content,
+            '3': command_content,
+            '4': command_content,
+            '5': insert_content,
             '6': 'content_replace',
             '7': 'content_delete',
             '8': '',
@@ -108,22 +136,72 @@ class ActionType:
             '21': 'text_redo',
             '22': ''
         }
+        if item['operator'] == '5':
+            #print(res[id]+' | '+content)
+            pass
         return res[id]
 
     @staticmethod
-    def check_key_content(content):
+    def check_insert_content(content, item_operator):
         '''
         check the key word in input string.
         :param content: input string
         :return: key dict which record whether input has key word
         '''
-        res = {'condition': 0, 'loop': 0}
+        if item_operator != '5':
+            return 'content_insert'
+
+        res = 'content_insert'
         pattern_loop = re.compile('while|for')
+        if pattern_loop.search(content):
+            return res+'_loop'
+        pattern_con = re.compile('(if|switch)\W+')
+        if pattern_con.search(content):
+            return res+'_condition'
+        pattern_compare = re.compile('<[^<>]?|<=|!=|[^<>]?>|>=')
+        if pattern_compare.search(content):
+            pat_com = re.compile('<<|>>|<.*>')
+            if not pat_com.search(content):
+                pat_comp = re.compile('([^a-zA-Z0-9\s])[a-zA-Z0-9]*<[^<>]?|<=|!=|[^<>]?>|>=')
+                if not pat_comp.search(content):
+                    return res+'_compare'
+        pattern_calculate = re.compile('\+|-|(\w)\*(\w)|(\w)/(\w)|->|<<|>>')
+        if pattern_calculate.search(content):
+            return res+'_calculate'
+        pattern_assign = re.compile('=')
+        if pattern_assign.search(content):
+            return res+'_assign'
+        pattern_function = re.compile('\S+\(')
+        if pattern_function.search(content):
+            pat_fun = re.compile('(if|switch|for|while)\(')
+            if not pat_fun.search(content):
+                return res+'_function'
+        pattern_keyword = re.compile('(\W|^)(char|void|int|double|vector|string|set|const|include)(\W|$)')
+        if pattern_keyword.search(content):
+            return res+'_keyword'
+        return res
+
+    @staticmethod
+    def check_command_content(content, item_operator):
+        res = 'text'
+        if item_operator != '1' and item_operator != '2' and item_operator != '3' and item_operator != '4':
+            return res
+        elif item_operator == '2':
+            res += '_cut'
+        elif item_operator == '3':
+            res += '_paste'
+        elif item_operator == '4':
+            res += '_copy'
+
+        pattern_loop = re.compile('while|for')
+        if pattern_loop.search(content):
+            return res+'_loop'
         pattern_con = re.compile('if|switch')
         if pattern_con.search(content):
-            res['condition'] = 1
-        if pattern_loop.search(content):
-            res['loop'] = 1
+            return res+'_condition'
+        pattern_logic = re.compile('[+\-*/<>=;]')
+        if pattern_logic.search(content):
+            return res+'_logic'
         return res
 
 
@@ -161,6 +239,29 @@ def convert_data_to_feature_seq(data):
     :return: vector list, score
     '''
     return (convert_to_feature_seq(convert_to_action_seq(data)), extract_score(data))
+
+
+def convert_insert_data_to_feature_seq(data):
+    fea_list = []
+    bound = [20, 30, 50, 60, 80, 90, 120, 130, 150, 160, 170]
+    for item in data:
+        if item['operator'] == '5':
+            content = item['textto']
+            tokens = get_token_list(content)
+            for tok in tokens:
+                keyid = tok['id']
+                i = 0
+                for b in bound:
+                    if keyid > b:
+                        i += 1
+                li = [(1 if i == n else 0) for n in range(12)]
+                arr = np.array(li).T
+                fea_list.append(arr)
+    return (fea_list, extract_score(data))
+
+
+
+
 
 
 
