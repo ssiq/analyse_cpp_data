@@ -3,6 +3,8 @@ import numpy as np
 from learning.feature.data_extractor import extract_score
 from slice.stat_slice import deal_result
 from learning.feature.lexical_analysis import get_token_list
+from util.constant import OperatorType
+from learning.feature.browser_search_keyword import get_keyword_from_url
 
 
 class ActionType:
@@ -110,8 +112,11 @@ class ActionType:
             content = item['buildlogcontent']
         if 'textto' in item:
             content = item['textto']
+        if 'url' in item:
+            content = item['url']
         command_content = ActionType.check_command_content(content, item['operator'])
         insert_content = ActionType.check_insert_content(content, item['operator'])
+        search_content = ActionType.get_url_feature(content, item['operator'])
         res = {
             '1': 'text_save',
             '2': command_content,
@@ -125,7 +130,7 @@ class ActionType:
             '10': 'debug_run',
             '11': 'debug_break',
             '12': 'debug_exception_not_handled',
-            '13': 'browser_url',
+            '13': search_content,
             '14': 'browser_url_close',
             '15': 'browser_copy',
             '16': 'browser_paste',
@@ -136,7 +141,7 @@ class ActionType:
             '21': 'text_redo',
             '22': ''
         }
-        if item['operator'] == '5':
+        if item['operator'] == OperatorType.CONTENT_INSERT:
             #print(res[id]+' | '+content)
             pass
         return res[id]
@@ -148,7 +153,7 @@ class ActionType:
         :param content: input string
         :return: key dict which record whether input has key word
         '''
-        if item_operator != '5':
+        if item_operator != OperatorType.CONTENT_INSERT:
             return 'content_insert'
 
         res = 'content_insert'
@@ -184,13 +189,13 @@ class ActionType:
     @staticmethod
     def check_command_content(content, item_operator):
         res = 'text'
-        if item_operator != '1' and item_operator != '2' and item_operator != '3' and item_operator != '4':
+        if item_operator != OperatorType.TEXT_SAVE and item_operator != OperatorType.TEXT_CUT and item_operator != OperatorType.TEXT_PASTE and item_operator != OperatorType.TEXT_COPY:
             return res
-        elif item_operator == '2':
+        elif item_operator == OperatorType.TEXT_CUT:
             res += '_cut'
-        elif item_operator == '3':
+        elif item_operator == OperatorType.TEXT_PASTE:
             res += '_paste'
-        elif item_operator == '4':
+        elif item_operator == OperatorType.TEXT_COPY:
             res += '_copy'
 
         pattern_loop = re.compile('while|for')
@@ -203,6 +208,14 @@ class ActionType:
         if pattern_logic.search(content):
             return res+'_logic'
         return res
+
+    @staticmethod
+    def get_url_feature(item, item_operator):
+        if item_operator == OperatorType.BROWSER_URL:
+            res = get_keyword_from_url(item['url'])
+            if res:
+                return 'browser_url'
+        return 'browser_url'
 
 
 def convert_to_action_seq(data):
@@ -245,7 +258,7 @@ def convert_insert_data_to_feature_seq(data):
     fea_list = []
     bound = [20, 30, 50, 60, 80, 90, 120, 130, 150, 160, 170]
     for item in data:
-        if item['operator'] == '5':
+        if item['operator'] == OperatorType.CONTENT_INSERT:
             content = item['textto']
             tokens = get_token_list(content)
             for tok in tokens:
