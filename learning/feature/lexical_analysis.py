@@ -192,9 +192,9 @@ def search_key(content):
     return -1
 
 
-def add_token(key_id, key_value, tokens):
+def add_token(key_id, key_value, tokens, bef_i, aft_i):
     #print(key_id, key_value)
-    tokens.append({'id': key_id, 'value': key_value})
+    tokens.append({'id': key_id, 'value': key_value, 'left_offset': bef_i, 'right_offset': aft_i})
 
 
 def get_token_list(content):
@@ -205,6 +205,7 @@ def get_token_list(content):
 
     while i < n:
         c = content[i]
+        before_i = i
         i += 1
 
         #处理字符串
@@ -223,9 +224,9 @@ def get_token_list(content):
 
             keyid = search_key(token_str)
             if keyid != -1:
-                add_token(keyid, token_str, token_list)
+                add_token(keyid, token_str, token_list, before_i, i)
             else:
-                add_token(TokenType.IDENTIFIER, token_str, token_list)
+                add_token(TokenType.IDENTIFIER, token_str, token_list, before_i, i)
         elif '0' <= c <= '9':
             token_str = ''
             token_str += c
@@ -244,39 +245,42 @@ def get_token_list(content):
                     break
 
             if point_num >1:
-                add_token(TokenType.ERROR_NUMBER, token_str, token_list)
+                add_token(TokenType.ERROR_NUMBER, token_str, token_list, before_i, i)
             else:
-                add_token(TokenType.NUMBER, token_str, token_list)
+                add_token(TokenType.NUMBER, token_str, token_list, before_i, i)
         elif c == '/' and i < n and content[i] == '*':
-            add_token(TokenType.NOTE1, '/*', token_list)
             i += 1
+            add_token(TokenType.NOTE1, '/*', token_list, before_i, i)
+            before_i = i
 
             token_str = ''
-            while i<n:
+            while i < n:
                 t = content[i]
                 i += 1
                 if t == '*' and i < n and content[i] == '/':
-                    add_token(TokenType.NOTE, token_str, token_list)
-                    add_token(TokenType.NOTE1_END, '*/', token_list)
+                    add_token(TokenType.NOTE, token_str, token_list, before_i, i-1)
+                    add_token(TokenType.NOTE1_END, '*/', token_list, i-1, i+1)
                     i += 1
                     break
                 else:
                     token_str += t
         elif c == '/' and i < n and content[i] == '/':
-            add_token(TokenType.NOTE2, '//', token_list)
             i += 1
+            add_token(TokenType.NOTE2, '//', token_list, before_i, i)
+            before_i = i
 
             token_str = ''
             while i < n:
                 t = content[i]
                 i += 1
                 if t == '\n':
-                    add_token(TokenType.NOTE, token_str, token_list)
+                    add_token(TokenType.NOTE, token_str, token_list, before_i, i-1)
                     break
                 else:
                     token_str += t
         elif c == '"':
-            add_token(TokenType.DOU_QUE, '"', token_list)
+            add_token(TokenType.DOU_QUE, '"', token_list, before_i, i)
+            before_i = i
 
             token_str = ''
             while i<n:
@@ -287,8 +291,8 @@ def get_token_list(content):
                     token_str += content[i]
                     i += 1
                 elif t == '"':
-                    add_token(TokenType.CONSTANT, token_str, token_list)
-                    add_token(TokenType.DOU_QUE, '"', token_list)
+                    add_token(TokenType.CONSTANT, token_str, token_list, before_i, i-1)
+                    add_token(TokenType.DOU_QUE, '"', token_list, i-1, i)
                     break
                 else:
                     token_str += t
@@ -297,138 +301,139 @@ def get_token_list(content):
             pass
 
         elif c == '=' and i < n and content[i] == '=':
-            add_token(TokenType.EQUAL, '==', token_list)
             i += 1
+            add_token(TokenType.EQUAL, '==', token_list, before_i, i)
         elif c == '=':
-            add_token(TokenType.ASG, '=', token_list)
+            add_token(TokenType.ASG, '=', token_list, before_i, i)
 
         elif c == '+' and i < n and content[i] == '=':
-            add_token(TokenType.COMPLETE_PLUS, '+=', token_list)
             i += 1
+            add_token(TokenType.COMPLETE_PLUS, '+=', token_list, before_i, i)
         elif c == '+' and i < n and content[i] == '+':
-            add_token(TokenType.SELF_PLUS, '++', token_list)
             i += 1
+            add_token(TokenType.SELF_PLUS, '++', token_list, before_i, i)
         elif c == '+':
-            add_token(TokenType.PLUS, '+', token_list)
+            add_token(TokenType.PLUS, '+', token_list, before_i, i)
 
         elif c == '-' and i < n and content[i] == '=':
-            add_token(TokenType.COMPLETE_MINUS, '-=', token_list)
             i += 1
+            add_token(TokenType.COMPLETE_MINUS, '-=', token_list, before_i, i)
         elif c == '-' and i < n and content[i] == '-':
-            add_token(TokenType.SELF_MINUS, '--', token_list)
             i += 1
+            add_token(TokenType.SELF_MINUS, '--', token_list, before_i, i)
         elif c == '-' and i < n and content[i] == '>':
-            add_token(TokenType.ARROW, '->', token_list)
             i += 1
+            add_token(TokenType.ARROW, '->', token_list, before_i, i)
         elif c == '-':
-            add_token(TokenType.MINUS, '-', token_list)
+            add_token(TokenType.MINUS, '-', token_list, before_i, i)
 
         elif c == '*' and i < n and content[i] == '=':
-            add_token(TokenType.COMPLETE_MUL, '*=', token_list)
             i += 1
+            add_token(TokenType.COMPLETE_MUL, '*=', token_list, before_i, i)
         elif c == '*':
-            add_token(TokenType.MUL, '*', token_list)
+            add_token(TokenType.MUL, '*', token_list, before_i, i)
 
         elif c == '/' and i < n and content[i] == '=':
-            add_token(TokenType.COMPLETE_DIV, '/=', token_list)
             i += 1
+            add_token(TokenType.COMPLETE_DIV, '/=', token_list, before_i, i)
         elif c == '/':
-            add_token(TokenType.DIV, '/', token_list)
+            add_token(TokenType.DIV, '/', token_list, before_i, i)
 
         elif c == '%' and i < n and content[i] == '=':
-            add_token(TokenType.COMPLETE_MOD, '%=', token_list)
             i += 1
+            add_token(TokenType.COMPLETE_MOD, '%=', token_list, before_i, i)
         elif c == '%':
-            add_token(TokenType.MOD, '%', token_list)
+            add_token(TokenType.MOD, '%', token_list, before_i, i)
 
         elif c == '<' and i < n and content[i] == '<':
-            add_token(TokenType.LEFT_MOVE, '<<', token_list)
             i += 1
+            add_token(TokenType.LEFT_MOVE, '<<', token_list, before_i, i)
         elif c == '>' and i < n and content[i] == '>':
-            add_token(TokenType.RIGHT_MOVE, '>>', token_list)
+            i += 1
+            add_token(TokenType.RIGHT_MOVE, '>>', token_list, before_i, i)
 
         elif c == '&' and i < n and content[i] == '=':
-            add_token(TokenType.COMPLETE_BYTE_AND, '&=', token_list)
             i += 1
+            add_token(TokenType.COMPLETE_BYTE_AND, '&=', token_list, before_i, i)
         elif c == '&' and i < n and content[i] == '&':
-            add_token(TokenType.AND, '&&', token_list)
             i += 1
+            add_token(TokenType.AND, '&&', token_list, before_i, i)
         elif c == '&':
-            add_token(TokenType.BYTE_AND, '&', token_list)
+            add_token(TokenType.BYTE_AND, '&', token_list, before_i, i)
 
         elif c == '|' and i < n and content[i] == '=':
-            add_token(TokenType.COMPLETE_BYTE_OR, '|=', token_list)
             i += 1
+            add_token(TokenType.COMPLETE_BYTE_OR, '|=', token_list, before_i, i)
         elif c == '|' and i < n and content[i] == '|':
-            add_token(TokenType.OR, '||', token_list)
             i += 1
+            add_token(TokenType.OR, '||', token_list, before_i, i)
         elif c == '|':
-            add_token(TokenType.BYTE_OR, '|', token_list)
+            add_token(TokenType.BYTE_OR, '|', token_list, before_i, i)
 
         elif c == '^' and i < n and content[i] == '=':
-            add_token(TokenType.COMPLETE_BYTE_XOR, '^=', token_list)
             i += 1
+            add_token(TokenType.COMPLETE_BYTE_XOR, '^=', token_list, before_i, i)
         elif c == '^':
-            add_token(TokenType.BYTE_XOR, '^', token_list)
+            add_token(TokenType.BYTE_XOR, '^', token_list, before_i, i)
 
         elif c == '~' and i < n and content[i] == '=':
-            add_token(TokenType.COMPLETE_NEGATE, '~=', token_list)
             i += 1
+            add_token(TokenType.COMPLETE_NEGATE, '~=', token_list, before_i, i)
         elif c == '~':
-            add_token(TokenType.NEGATE, '~', token_list)
+            add_token(TokenType.NEGATE, '~', token_list, before_i, i)
 
         elif c == '!' and i < n and content[i] == '=':
-            add_token(TokenType.NOT_EQUAL, '!=', token_list)
             i += 1
+            add_token(TokenType.NOT_EQUAL, '!=', token_list, before_i, i)
         elif c == '!':
-            add_token(TokenType.NOT, '!', token_list)
+            add_token(TokenType.NOT, '!', token_list, before_i, i)
 
         elif c == '<' and i < n and content[i] == '=':
-            add_token(TokenType.LES_EQUAL, '<=', token_list)
             i += 1
+            add_token(TokenType.LES_EQUAL, '<=', token_list, before_i, i)
         elif c == '<':
-            add_token(TokenType.LES_THAN, '<', token_list)
+            add_token(TokenType.LES_THAN, '<', token_list, before_i, i)
 
         elif c == '>' and i < n and content[i] == '=':
-            add_token(TokenType.GRT_EQUAL, '>=', token_list)
             i += 1
+            add_token(TokenType.GRT_EQUAL, '>=', token_list, before_i, i)
         elif c == '>':
-            add_token(TokenType.GRT_THAN, '>', token_list)
+            add_token(TokenType.GRT_THAN, '>', token_list, before_i, i)
 
         elif c == '(':
-            add_token(TokenType.LEFT_BRA, '(', token_list)
+            add_token(TokenType.LEFT_BRA, '(', token_list, before_i, i)
         elif c == ')':
-            add_token(TokenType.RIGHT_BRA, ')', token_list)
+            add_token(TokenType.RIGHT_BRA, ')', token_list, before_i, i)
 
         elif c == '[':
-            add_token(TokenType.LEFT_INDEX, '[', token_list)
+            add_token(TokenType.LEFT_INDEX, '[', token_list, before_i, i)
         elif c == ']':
-            add_token(TokenType.RIGHT_INDEX, ']', token_list)
+            add_token(TokenType.RIGHT_INDEX, ']', token_list, before_i, i)
 
         elif c == '{':
-            add_token(TokenType.LEFT_BOUNDER, '{', token_list)
+            add_token(TokenType.LEFT_BOUNDER, '{', token_list, before_i, i)
         elif c == '}':
-            add_token(TokenType.RIGHT_BOUNDER, '}', token_list)
+            add_token(TokenType.RIGHT_BOUNDER, '}', token_list, before_i, i)
 
         elif c == '.':
-            add_token(TokenType.POINTER, '.', token_list)
+            add_token(TokenType.POINTER, '.', token_list, before_i, i)
         elif c == ',':
-            add_token(TokenType.COMMA, ',', token_list)
+            add_token(TokenType.COMMA, ',', token_list, before_i, i)
         elif c == '#':
-            add_token(TokenType.JING, '#', token_list)
+            add_token(TokenType.JING, '#', token_list, before_i, i)
         elif c == '_':
-            add_token(TokenType.UNDER_LINE, '_', token_list)
+            add_token(TokenType.UNDER_LINE, '_', token_list, before_i, i)
         elif c == ';':
-            add_token(TokenType.SEMI, ';', token_list)
+            add_token(TokenType.SEMI, ';', token_list, before_i, i)
         elif c == '\'':
-            add_token(TokenType.SIG_QUE, '\'', token_list)
+            add_token(TokenType.SIG_QUE, '\'', token_list, before_i, i)
         elif c == ':' and i < n and content[i] == ':':
-            add_token(TokenType.SCOPE, '::', token_list)
             i += 1
+            add_token(TokenType.SCOPE, '::', token_list, before_i, i)
         elif c == ':':
-            add_token(TokenType.COLON, ':', token_list)
+            add_token(TokenType.COLON, ':', token_list, before_i, i)
         elif c == '?':
-            add_token(TokenType.QUES, '?', token_list)
+            add_token(TokenType.QUES, '?', token_list, before_i, i)
 
     return token_list
 

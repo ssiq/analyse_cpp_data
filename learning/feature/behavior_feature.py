@@ -5,11 +5,13 @@ from slice.stat_slice import deal_result
 from learning.feature.lexical_analysis import get_token_list
 from util.constant import OperatorType
 from learning.feature.browser_search_keyword import get_keyword_from_url
+from learning.feature.content_recovery import convert_token_behavior
+from learning.feature.lexical_analysis import TokenType
 
 
 class ActionType:
 
-    COUNT = 36
+    COUNT = 39
 
     TEXT_SAVE = 1
     TEXT_CUT = 2
@@ -32,24 +34,32 @@ class ActionType:
     CONTENT_INSERT_COMPARE = 19
     CONTENT_INSERT_ASSIGN = 20
     CONTENT_INSERT_CALCULATE = 21
-    CONTENT_REPLACE = 22
-    CONTENT_DELETE = 23
-    BUILD_SUCCESS = 24
-    BUILD_FAILED = 25
-    DEBUG_RUN = 26
-    DEBUG_BREAK = 27
-    DEBUG_EXCEPTION_NOT_HANDLED = 28
-    BROWSER_URL = 29
-    BROWSER_URL_CLOSE = 30
-    BROWSER_COPY = 31
-    BROWSER_PASTE = 32
-    BROWSER_CUT = 33
-    TEST = 34
-    TEXT_UNDO = 35
-    TEXT_REDO = 36
+    CONTENT_INSERT_NUMBER = 22
+    CONTENT_INSERT_IDENTIFIER = 23
+    CONTENT_INSERT_NOTE = 24
+    CONTENT_REPLACE = 25
+    CONTENT_DELETE = 26
+    BUILD_SUCCESS = 27
+    BUILD_FAILED = 28
+    DEBUG_RUN = 29
+    DEBUG_BREAK = 30
+    DEBUG_EXCEPTION_NOT_HANDLED = 31
+    BROWSER_URL = 32
+    BROWSER_URL_CLOSE = 33
+    BROWSER_COPY = 34
+    BROWSER_PASTE = 35
+    BROWSER_CUT = 36
+    TEST = 37
+    TEXT_UNDO = 38
+    TEXT_REDO = 39
 
     @staticmethod
     def name_to_feature(name):
+        '''
+        Get the vector form about the action name
+        :param name: action name
+        :return: vector
+        '''
         res = {
             'text_save': ActionType.TEXT_SAVE,
             'text_cut': ActionType.TEXT_CUT,
@@ -72,6 +82,9 @@ class ActionType:
             'content_insert_compare': ActionType.CONTENT_INSERT_COMPARE,
             'content_insert_assign': ActionType.CONTENT_INSERT_ASSIGN,
             'content_insert_calculate': ActionType.CONTENT_INSERT_CALCULATE,
+            'content_insert_number': ActionType.CONTENT_INSERT_NUMBER,
+            'content_insert_identifier': ActionType.CONTENT_INSERT_IDENTIFIER,
+            'content_insert_note': ActionType.CONTENT_INSERT_NOTE,
             'content_replace': ActionType.CONTENT_REPLACE,
             'content_delete': ActionType.CONTENT_DELETE,
             'build_success': ActionType.BUILD_SUCCESS,
@@ -88,11 +101,6 @@ class ActionType:
             'text_undo': ActionType.TEXT_UNDO,
             'text_redo': ActionType.TEXT_REDO,
         }
-        '''
-        Get the vector form about the action name
-        :param name: action name
-        :return: vector
-        '''
 
         acid = res[name]
         li = [(1 if (n+1) == acid else 0) for n in range(ActionType.COUNT)]
@@ -115,35 +123,36 @@ class ActionType:
         if 'url' in item:
             content = item['url']
         command_content = ActionType.check_command_content(content, item['operator'])
-        insert_content = ActionType.check_insert_content(content, item['operator'])
+        insert_content = ActionType.check_insert_token_content(item)
         search_content = ActionType.get_url_feature(content, item['operator'])
         res = {
-            '1': 'text_save',
+            '1': ['text_save'],
             '2': command_content,
             '3': command_content,
             '4': command_content,
             '5': insert_content,
-            '6': 'content_replace',
-            '7': 'content_delete',
-            '8': '',
-            '9': 'build_success' if id != '10' or deal_result(content) == 1 else 'build_failed',
-            '10': 'debug_run',
-            '11': 'debug_break',
-            '12': 'debug_exception_not_handled',
+            '6': insert_content,
+            '7': insert_content,
+            '8': [''],
+            '9': ['build_success' if id != '10' or deal_result(content) == 1 else 'build_failed'],
+            '10': ['debug_run'],
+            '11': ['debug_break'],
+            '12': ['debug_exception_not_handled'],
             '13': search_content,
-            '14': 'browser_url_close',
-            '15': 'browser_copy',
-            '16': 'browser_paste',
-            '17': 'browser_cut',
-            '18': 'test',
-            '19': 'text_undo',
-            '20': '',
-            '21': 'text_redo',
-            '22': ''
+            '14': ['browser_url_close'],
+            '15': ['browser_copy'],
+            '16': ['browser_paste'],
+            '17': ['browser_cut'],
+            '18': ['test'],
+            '19': ['text_undo'],
+            '20': [''],
+            '21': ['text_redo'],
+            '22': ['']
         }
         if item['operator'] == OperatorType.CONTENT_INSERT:
             #print(res[id]+' | '+content)
             pass
+        print(res[id])
         return res[id]
 
     @staticmethod
@@ -154,43 +163,81 @@ class ActionType:
         :return: key dict which record whether input has key word
         '''
         if item_operator != OperatorType.CONTENT_INSERT:
-            return 'content_insert'
+            return ['content_insert']
 
         res = 'content_insert'
         pattern_loop = re.compile('while|for')
         if pattern_loop.search(content):
-            return res+'_loop'
+            return [res+'_loop']
         pattern_con = re.compile('(if|switch)\W+')
         if pattern_con.search(content):
-            return res+'_condition'
+            return [res+'_condition']
         pattern_compare = re.compile('<[^<>]?|<=|!=|[^<>]?>|>=')
         if pattern_compare.search(content):
             pat_com = re.compile('<<|>>|<.*>')
             if not pat_com.search(content):
                 pat_comp = re.compile('([^a-zA-Z0-9\s])[a-zA-Z0-9]*<[^<>]?|<=|!=|[^<>]?>|>=')
                 if not pat_comp.search(content):
-                    return res+'_compare'
+                    return [res+'_compare']
         pattern_calculate = re.compile('\+|-|(\w)\*(\w)|(\w)/(\w)|->|<<|>>')
         if pattern_calculate.search(content):
-            return res+'_calculate'
+            return [res+'_calculate']
         pattern_assign = re.compile('=')
         if pattern_assign.search(content):
-            return res+'_assign'
+            return [res+'_assign']
         pattern_function = re.compile('\S+\(')
         if pattern_function.search(content):
             pat_fun = re.compile('(if|switch|for|while)\(')
             if not pat_fun.search(content):
-                return res+'_function'
+                return [res+'_function']
         pattern_keyword = re.compile('(\W|^)(char|void|int|double|vector|string|set|const|include)(\W|$)')
         if pattern_keyword.search(content):
-            return res+'_keyword'
+            return [res+'_keyword']
+        return [res]
+
+    @staticmethod
+    def check_insert_token_content(item):
+        if item[OperatorType.NAME] != OperatorType.CONTENT_INSERT and item[OperatorType.NAME] != OperatorType.CONTENT_DELETE and item[OperatorType.NAME] != OperatorType.CONTENT_REPLACE:
+            return ['content_insert']
+
+        res = []
+        token_list = convert_token_behavior(item)
+        for to in token_list:
+            if to['id'] == TokenType.FOR or to['id'] == TokenType.WHILE:
+                str = 'content_insert_loop'
+                res.append(str)
+            elif to['id'] == TokenType.IF or to['id'] == TokenType.SWITCH or to['id'] == TokenType.ELSE:
+                str = 'content_insert_condition'
+                res.append(str)
+            elif TokenType.NOT <= to['id'] <= TokenType.OR:
+                str = 'content_insert_compare'
+                res.append(str)
+            elif TokenType.PLUS <= to['id'] <= TokenType.COMPLETE_NEGATE:
+                str = 'content_insert_calculate'
+                res.append(str)
+            elif to['id'] == TokenType.ASG:
+                str = 'content_insert_assign'
+                res.append(str)
+            elif to['id'] <= TokenType.THIS:
+                str = 'content_insert_keyword'
+                res.append(str)
+            elif to['id'] == TokenType.NUMBER:
+                str = 'content_insert_number'
+                res.append(str)
+            elif to['id'] == TokenType.IDENTIFIER:
+                str = 'content_insert_identifier'
+                res.append(str)
+            elif to['id'] == TokenType.NOTE:
+                str = 'content_insert_note'
+                res.append(str)
         return res
+
 
     @staticmethod
     def check_command_content(content, item_operator):
         res = 'text'
         if item_operator != OperatorType.TEXT_SAVE and item_operator != OperatorType.TEXT_CUT and item_operator != OperatorType.TEXT_PASTE and item_operator != OperatorType.TEXT_COPY:
-            return res
+            return [res]
         elif item_operator == OperatorType.TEXT_CUT:
             res += '_cut'
         elif item_operator == OperatorType.TEXT_PASTE:
@@ -200,22 +247,22 @@ class ActionType:
 
         pattern_loop = re.compile('while|for')
         if pattern_loop.search(content):
-            return res+'_loop'
+            return [res+'_loop']
         pattern_con = re.compile('if|switch')
         if pattern_con.search(content):
-            return res+'_condition'
+            return [res+'_condition']
         pattern_logic = re.compile('[+\-*/<>=;]')
         if pattern_logic.search(content):
-            return res+'_logic'
-        return res
+            return [res+'_logic']
+        return [res]
 
     @staticmethod
-    def get_url_feature(item, item_operator):
+    def get_url_feature(url, item_operator):
         if item_operator == OperatorType.BROWSER_URL:
-            res = get_keyword_from_url(item['url'])
+            res = get_keyword_from_url(url)
             if res:
-                return 'browser_url'
-        return 'browser_url'
+                return ['browser_url']
+        return ['browser_url']
 
 
 def convert_to_action_seq(data):
@@ -226,9 +273,10 @@ def convert_to_action_seq(data):
     '''
     res = []
     for item in data:
-        str = ActionType.item_to_name(item)
-        if str !=None and str != '':
-            res.append(str)
+        strs = ActionType.item_to_name(item)
+        for str in strs:
+            if str != None and str != '':
+                res.append(str)
     return res
 
 
